@@ -1,10 +1,6 @@
-# RealMoneySo
+# Gin-Learning
 
-## Introduction
-
-* DB は MySQL
-* アプリ用サーバーは AL2023
-* Go は最新バージョン
+學習 Gin
 
 ## Usage
 
