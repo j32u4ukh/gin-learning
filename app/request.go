@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"image/png"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 )
 
 type Request struct {
@@ -91,7 +93,7 @@ func (r *Request) ParseContent() error {
 			return errors.New("not found boundary")
 		}
 		var index int
-
+		// fmt.Printf("boundary: %s\nPrefixData: %s\nSuffixData: %s\n", boundary, string(r.Data[:120]), string(r.Data[len(r.Data)-120:]))
 		// 移除結尾 boundary
 		endSequence := []byte(fmt.Sprintf("%s--", boundary))
 		index = bytes.Index(r.Data, endSequence)
@@ -101,7 +103,7 @@ func (r *Request) ParseContent() error {
 
 		r.Data = r.Data[:index]
 		r.Files = []*File{}
-		sequence := []byte(fmt.Sprintf("%s\r\n", boundary))
+		sequence := []byte(fmt.Sprintf("--%s\r\n", boundary))
 		nSequence := len(sequence)
 
 		// LastIndex
@@ -109,14 +111,15 @@ func (r *Request) ParseContent() error {
 
 		for index != -1 {
 			data := []byte(r.Data[index+nSequence:])
-			fmt.Printf("data: %+v\n", data)
+			blockData := []byte(r.Data[index:])
+			fmt.Printf("boundary: %s\nPrefixData: %s\nSuffixData: %s\n", boundary, string(blockData[:120]), string(blockData[len(blockData)-120:]))
 
 			file := NewFile()
 			file.Parse(data)
 			fmt.Printf("Header: %+v\n", file.Header)
 			fmt.Printf("Meta: %+v\n", file.MetaData)
 			isPng := file.Header["Content-Type"] == "image/png"
-			if(isPng){
+			if isPng {
 				savePng(file.Data)
 			}
 			r.Files = append(r.Files, file)
@@ -130,26 +133,28 @@ func (r *Request) ParseContent() error {
 	return nil
 }
 
-func savePng(pngData []byte){
-	// 创建一个字节缓冲区，并将PNG二进制数据写入其中
+func savePng(pngData []byte) {
+	// 創建一個字節緩沖區，並將PNG二進制數據寫入其中
 	buf := bytes.NewBuffer(pngData)
 
-	// 解码PNG数据
+	// 解碼PNG數據
 	img, err := png.Decode(buf)
 	if err != nil {
 		fmt.Println("Error decoding PNG data:", err)
 		return
 	}
 
-	// 创建一个新的文件用于保存解码后的图像
-	outFile, err := os.Create("./output.png") 
+	// 創建一個新的文件用於保存解碼後的圖像
+	fileName := fmt.Sprintf("./output-%d-%d.png", time.Now().UnixMilli(), rand.Intn(100))
+	fmt.Printf("fileName: %s\n", fileName)
+	outFile, err := os.Create(fileName)
 	if err != nil {
 		fmt.Println("Error creating output file:", err)
 		return
 	}
 	defer outFile.Close()
 
-	// 将图像保存到文件中
+	// 將圖像保存到文件中
 	err = png.Encode(outFile, img)
 	if err != nil {
 		fmt.Println("Error encoding image:", err)
@@ -170,6 +175,11 @@ func (r Request) String() string {
 	switch ctype {
 	case "application/json":
 		req += fmt.Sprintf("JsonData: %+v", r.JsonData)
+	case "multipart/form-data":
+		for i, file := range r.Files {
+			req += fmt.Sprintf("File %d\r\n", i+1)
+			req += fmt.Sprintf("Header: %+v\r\n", file.Header)
+		}
 	default:
 		req += SliceToString(r.Data)
 	}

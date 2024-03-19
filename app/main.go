@@ -75,7 +75,7 @@ func handleRequest(conn net.Conn) {
 		return
 	}
 
-	fmt.Printf("request: %+v\n", request)
+	// fmt.Printf("request: %+v\n", request)
 
 	fmt.Println("================================================================")
 	// Send a response back to person contacting us.
