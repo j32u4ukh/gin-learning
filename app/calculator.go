@@ -182,6 +182,35 @@ func (c Calculator) ParseFormula(formula string) ([]string, error) {
 	return elements, nil
 }
 
+func (c Calculator) Parse(elements []string, delimiters ...string) ([]string, error) {
+	if len(delimiters) == 0{
+		return elements, nil
+	}
+	results := []string{}
+	delimiter := rune(delimiters[0][0])
+	delimiters = delimiters[1:]
+	var element string
+	var i, index int	
+	var e rune
+	for _, element = range elements{
+		index = 0
+		for i, e = range element{
+			if e == delimiter{
+				results = append(results, element[index: i])
+				results = append(results, string(e))
+				index = i + 1
+			}
+		}
+		if index != len(element){
+			results = append(results, element[index:])
+		}
+	}
+	if(len(delimiters) > 0){
+		return c.Parse(results, delimiters...)
+	}
+	return results, nil
+}
+
 func (c Calculator) GetElementType(s string) int {
 	rs := []rune(s)
 	if len(rs) > 1 {
