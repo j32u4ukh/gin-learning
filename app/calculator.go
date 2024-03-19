@@ -35,8 +35,8 @@ func NewCalculator() *Calculator {
 	}
 }
 
-func (c *Calculator) SetDigits(digits int){
-	if(digits < 0){
+func (c *Calculator) SetDigits(digits int) {
+	if digits < 0 {
 		digits = 0
 	}
 	c.digits = digits
@@ -45,47 +45,47 @@ func (c *Calculator) SetDigits(digits int){
 // a + b - c * d - e / f
 func (c Calculator) ComputeV1(formula string) (string, error) {
 	elements, err := c.ParseFormula(formula)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	// muliply or divide
 	elements, err = c.computeAndSquash(elements, "*", "/")
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	// plus or minus
 	elements, err = c.computeAndSquash(elements, "+", "-")
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
-	if len(elements) != 1{
+	if len(elements) != 1 {
 		fmt.Printf("elements: %+v\n", elements)
 		return "", errors.New("unexception elements in formula")
 	}
 	return elements[0], nil
 }
 
-func (c Calculator) computeAndSquash(elements []string, targets ...string)([]string, error){
+func (c Calculator) computeAndSquash(elements []string, targets ...string) ([]string, error) {
 	index := c.FindIndex(elements, targets...)
 	var v1, v2, op, result string
 	var prev, next []string
 	var err error
-	for index != -1{
-		if index == 0 || index == len(elements) - 1{
+	for index != -1 {
+		if index == 0 || index == len(elements)-1 {
 			return nil, errors.New("error format of formula")
 		}
-		v1 = elements[index - 1]
+		v1 = elements[index-1]
 		op = elements[index]
-		v2 = elements[index + 1]
-		if c.GetElementType(v1) != TypeNumber || c.GetElementType(v2) != TypeNumber{
+		v2 = elements[index+1]
+		if c.GetElementType(v1) != TypeNumber || c.GetElementType(v2) != TypeNumber {
 			return nil, errors.New("error format of formula")
 		}
 		result, err = c.compute(v1, op, v2)
-		if err != nil{
+		if err != nil {
 			return nil, errors.New("invalid element of formula")
 		}
-		prev = elements[:index - 1]
-		next = elements[index + 2:]
+		prev = elements[:index-1]
+		next = elements[index+2:]
 		elements = append(prev, result)
 		elements = append(elements, next...)
 		index = c.FindIndex(elements, targets...)
@@ -93,17 +93,17 @@ func (c Calculator) computeAndSquash(elements []string, targets ...string)([]str
 	return elements, nil
 }
 
-func (c Calculator) compute(v1 string, op string, v2 string)(string, error){
+func (c Calculator) compute(v1 string, op string, v2 string) (string, error) {
 	var f1, f2 float64
 	var err error
-	if f1, err = strconv.ParseFloat(v1, 64); err != nil{
+	if f1, err = strconv.ParseFloat(v1, 64); err != nil {
 		return "", errors.New("cannot convert element to number")
 	}
-	if f2, err = strconv.ParseFloat(v2, 64); err != nil{
+	if f2, err = strconv.ParseFloat(v2, 64); err != nil {
 		return "", errors.New("cannot convert element to number")
 	}
 	var result float64
-	switch(op){
+	switch op {
 	case "+":
 		result = f1 + f2
 	case "-":
@@ -120,11 +120,11 @@ func (c Calculator) compute(v1 string, op string, v2 string)(string, error){
 	return fmt.Sprintf(format, result), nil
 }
 
-func (c Calculator) FindIndex(elements []string, targets ...string)int{
+func (c Calculator) FindIndex(elements []string, targets ...string) int {
 	var t string
-	for i, e := range elements{
-		for _, t = range targets{
-			if e == t{
+	for i, e := range elements {
+		for _, t = range targets {
+			if e == t {
 				return i
 			}
 		}
@@ -132,7 +132,7 @@ func (c Calculator) FindIndex(elements []string, targets ...string)int{
 	return -1
 }
 
-func (c Calculator) ParseFormula(formula string) ([]string, error){
+func (c Calculator) ParseFormula(formula string) ([]string, error) {
 	var currType, t int = TypeNone, TypeNone
 	var crossType int
 	elements := []string{}
@@ -173,8 +173,8 @@ func (c Calculator) ParseFormula(formula string) ([]string, error){
 		}
 		currType = t
 	}
-	if(len(rs) != 0){
-		if currType == TypeOperator{
+	if len(rs) != 0 {
+		if currType == TypeOperator {
 			return nil, errors.New("formula end with operator")
 		}
 		elements = append(elements, string(rs))
@@ -184,9 +184,9 @@ func (c Calculator) ParseFormula(formula string) ([]string, error){
 
 func (c Calculator) GetElementType(s string) int {
 	rs := []rune(s)
-	if len(rs) > 1{
+	if len(rs) > 1 {
 		return TypeNumber
-	}else{
+	} else {
 		return c.GetType(rs[0])
 	}
 }
@@ -202,31 +202,35 @@ func (c Calculator) GetType(b rune) int {
 }
 
 // a + (b - c) * (d - e) / f
-func (c Calculator) Compute(formula string) (string, error) {
-	// left := 0
-	// right := 0
-	// length := len(formula)
-	// var index int
-	// var f string
+func (c Calculator) ComputeV2(formula string) (string, error) {
+	left := 0
+	right := 0
+	length := len(formula)
+	var index int
+	var f string
 
-	// // Find parentheses
-	// for i := 0; i < length; i++ {
-	// 	f = string(formula[i])
-	// 	switch f {
-	// 	case "(":
-	// 		if left == 0 {
-	// 			index = i
-	// 		}
-	// 		left += 1
-	// 	case ")":
-	// 		right += 1
-	// 		if left < right {
-	// 			return "", errors.New("Error format of formula.")
-	// 		} else if left == right {
-	// 			value, err := c.Compute()
-	// 		}
-	// 	default:
-	// 	}
-	// }
-	return formula, nil
+	// Find parentheses
+	for i := 0; i < length; i++ {
+		f = string(formula[i])
+		switch f {
+		case "(":
+			if left == 0 {
+				index = i
+			}
+			left += 1
+		case ")":
+			right += 1
+			if left < right {
+				return "", errors.New("error format of formula")
+			} else if left == right {
+				value, err := c.ComputeV2(formula[index+1 : i])
+				if err != nil {
+					return "", err
+				}
+				return c.ComputeV2(formula[:index] + value + formula[i+1:])
+			}
+		default:
+		}
+	}
+	return c.ComputeV1(formula)
 }
