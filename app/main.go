@@ -34,5 +34,5 @@ func main() {
 		calculator.SetDigits(postData.Digits)
 		ctx.JSON(http.StatusOK, gin.H{"msg": "OK"})
 	})
-	server.Run()
+	server.Run(":8080")
 }
